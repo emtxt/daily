@@ -110,8 +110,19 @@ struct Plan {
             let marker = todo.isHighPriority ? "*" : "-"
             return "\(marker) \(Self.capitalizingFirstLetter(of: todo.text))"
         }
+        let scheduleHeading = "# Schedule"
+        let todoHeading = "# To-dos"
+        let scheduleSection = eventLines.isEmpty ? [] : [scheduleHeading] + eventLines
+        let todoSection = todoLines.isEmpty ? [] : [todoHeading] + todoLines
+        let otherLines = remainingLines.filter { line in
+            switch line.trimmingCharacters(in: .whitespaces) {
+            case scheduleHeading: eventLines.isEmpty
+            case todoHeading: todoLines.isEmpty
+            default: true
+            }
+        }
         let titleLines = title.isEmpty ? [] : [title]
-        let sections = [titleLines, eventLines, todoLines, remainingLines].filter { !$0.isEmpty }
+        let sections = [titleLines, scheduleSection, todoSection, otherLines].filter { !$0.isEmpty }
         guard !sections.isEmpty else { return "" }
         return sections
             .map { $0.joined(separator: "\n") }

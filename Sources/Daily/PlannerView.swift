@@ -220,7 +220,7 @@ private struct PlanFormatHelp: View {
                 Text("**Events.** Start with a 24-hour time. `8` means 08:00, `845` means 08:45, and `1330` means 13:30. Use `-` for an end time or `+` for a duration in minutes. Spaces around either are optional. An end time at or before the start means the event ends the next day.")
                 Text("**To-dos.** Start with `-` for a regular task or `*` for high priority.")
                 Text("**Comments.** Start a line with `#`. The preview skips comments and invalid entries.")
-                Text("**Format** normalizes times, capitalizes descriptions, sorts events, and puts high-priority tasks first. Comments and invalid lines move to the end in their original order.")
+                Text("**Format** adds section headings, normalizes times, capitalizes descriptions, sorts events, and puts high-priority tasks first. Other comments and invalid lines move to the end in their original order.")
             }
             .font(.callout)
             .lineSpacing(2)

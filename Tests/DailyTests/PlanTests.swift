@@ -115,7 +115,9 @@ struct PlanTests {
         let plan = Plan("""
             # comment
               Friday #1
+              # Schedule
               2300 + 90  late train
+              # To-dos
               - normal first
               * «écrire»
               8 breakfast
@@ -133,10 +135,12 @@ struct PlanTests {
         #expect(formattedSource == """
             Friday #1
 
+            # Schedule
             08:00 Breakfast
             09:00 - 10:00 Plan the day
             23:00 - 00:30 Late train
 
+            # To-dos
             * «Écrire»
             * Important second
             - Normal first
@@ -160,6 +164,6 @@ struct PlanTests {
     func exclamationMarkIsLiteralText() {
         let plan = Plan("!Day\n- 123\n!!")
         #expect(plan.title == "!Day")
-        #expect(plan.formattedSource == "!Day\n\n- 123\n\n!!\n")
+        #expect(plan.formattedSource == "!Day\n\n# To-dos\n- 123\n\n!!\n")
     }
 }

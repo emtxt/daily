@@ -40,7 +40,7 @@ Use `-` for an end time or `+` for a duration in minutes. Spaces around either o
 
 Start to-dos with `-` or use `*` for high priority. Events and to-dos can be interleaved. The PDF groups them into separate sections, sorts events by start time, and keeps to-dos in input order. High-priority items appear in bold on a light gray background.
 
-Lines starting with `#` are comments. The preview skips comments, blank lines, and unrecognized entries. **Format** writes event times as `HH:MM` or `HH:MM - HH:MM`, capitalizes descriptions, and puts high-priority to-dos first. It moves comments and unrecognized lines to the end in their original order.
+Lines starting with `#` are comments. The preview skips comments, blank lines, and unrecognized entries. **Format** adds `# Schedule` and `# To-dos` above their sections, writes event times as `HH:MM` or `HH:MM - HH:MM`, capitalizes descriptions, and puts high-priority to-dos first. It moves other comments and unrecognized lines to the end in their original order.
 
 The calendar shows an hourly grid from 08:00 to 18:00 by default and extends to include earlier or later events. Daily tightens spacing when needed and reports an error if the plan still exceeds one page.
 
