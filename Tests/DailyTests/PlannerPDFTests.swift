@@ -96,6 +96,19 @@ struct PlannerPDFTests {
         #expect(page.string?.contains("To-do") == false)
     }
 
+    @Test(arguments: [false, true])
+    func rulesExtendToTheBottomOfTheChecklist(hasTodo: Bool) throws {
+        let plan = Plan(hasTodo ? "Day\n- First task" : "Day")
+        let document = try openPlannerPDF(PlannerPDF.make(from: plan))
+        let page = try #require(document.page(at: 0))
+        let heading = try bounds(of: "To-do", on: page)
+        let bottomRows = CGRect(x: heading.minX - 2, y: 42, width: 140, height: 80)
+        let ink = try minimumGray(in: bottomRows, on: page)
+
+        #expect(ink < 245)
+        #expect((ink < 150) == !hasTodo)
+    }
+
     @Test
     func compactsDenseChecklistToFitOnePage() throws {
         let items = (1...23).map { "- Task \($0)" }.joined(separator: "\n")

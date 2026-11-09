@@ -44,7 +44,7 @@ Lines starting with `#` are comments. The preview skips comments, blank lines, a
 
 The calendar shows an hourly grid from 08:00 to 18:00 by default and extends to include earlier or later events. Daily tightens spacing when needed and reports an error if the plan still exceeds one page.
 
-A plan without events or to-dos prints as a worksheet with the hourly grid and empty checklist rows for handwriting. An empty draft also leaves room to write the title by hand.
+A plan without events or to-dos prints as a worksheet with the hourly grid and empty checklist rows for handwriting. An empty draft also leaves room to write the title by hand. When a plan has to-dos, ruled writing space extends below them with room to draw your own checkboxes.
 
 ## Run tests
 

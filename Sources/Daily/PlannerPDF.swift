@@ -127,17 +127,6 @@ enum PlannerPDF {
         var rowTop = top
         rule(at: rowTop, from: left, to: rightEdge, shade: 0.61, weight: 0.55, in: context)
 
-        if todos.isEmpty {
-            let rowHeight = 2 * style.taskPadding + leading
-            while rowTop + rowHeight <= bottomEdge {
-                let baseline = rowTop + style.taskPadding + ceil(normalFont.ascender)
-                checkbox(x: left + 0.5, baseline: baseline, in: context)
-                rowTop += rowHeight
-                rule(at: rowTop, from: left, to: rightEdge, shade: 0.76, weight: 0.45, in: context)
-            }
-            return
-        }
-
         for todo in todos {
             let font = todo.isHighPriority ? priorityFont : normalFont
             let room = bottomEdge - rowTop - 2 * style.taskPadding
@@ -156,6 +145,16 @@ enum PlannerPDF {
             }
 
             rowTop += height
+            rule(at: rowTop, from: left, to: rightEdge, shade: 0.76, weight: 0.45, in: context)
+        }
+
+        let rowHeight = 2 * style.taskPadding + leading
+        while rowTop + rowHeight <= bottomEdge {
+            if todos.isEmpty {
+                let baseline = rowTop + style.taskPadding + ceil(normalFont.ascender)
+                checkbox(x: left + 0.5, baseline: baseline, in: context)
+            }
+            rowTop += rowHeight
             rule(at: rowTop, from: left, to: rightEdge, shade: 0.76, weight: 0.45, in: context)
         }
     }
