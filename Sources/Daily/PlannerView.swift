@@ -157,10 +157,28 @@ struct PlannerView: View {
     }
 
     private var previewPane: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        let refreshNotice = "Refresh preview to print."
+        let status = preview != nil && printableDocument == nil ? refreshNotice : printStatus
+
+        return VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("PDF Preview").font(.headline)
-                Spacer()
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("PDF Preview").font(.headline)
+                    // Let the status overlay change without affecting the toolbar height.
+                    Text(refreshNotice)
+                        .lineLimit(1)
+                        .hidden()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .overlay(alignment: .leading) {
+                            if let status {
+                                Text(status)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                                    .help(status)
+                            }
+                        }
+                        .font(.caption)
+                }
                 Button("Create Preview", action: createPreview)
                 PrintSplitButton(
                     document: printableDocument,
@@ -188,16 +206,6 @@ struct PlannerView: View {
                 RoundedRectangle(cornerRadius: 6)
                     .strokeBorder(.separator)
                     .allowsHitTesting(false)
-            }
-
-            if preview != nil && printableDocument == nil {
-                Text("Create a new preview to print these changes.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else if let printStatus {
-                Text(printStatus)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
         }
         .padding(16)
