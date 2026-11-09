@@ -126,11 +126,8 @@ enum PlannerPDF {
 
         draw(line("Schedule", font: sectionFont), x: margin, baseline: headingBaseline, in: context)
         try drawCalendar(plan.events, hours: hours, top: contentTop, right: calendarRight, style: style, in: context)
-        if !plan.todos.isEmpty || plan.isEmpty {
-            draw(line("To-do", font: sectionFont), x: taskLeft,
-                 baseline: headingBaseline, in: context)
-            try drawTasks(plan.todos, top: contentTop, left: taskLeft, style: style, in: context)
-        }
+        draw(line("To-do", font: sectionFont), x: taskLeft, baseline: headingBaseline, in: context)
+        try drawTasks(plan.todos, top: contentTop, left: taskLeft, style: style, in: context)
 
         let timestamp = Date.now.formatted(.verbatim(
             """

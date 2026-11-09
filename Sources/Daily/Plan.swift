@@ -66,8 +66,6 @@ struct Plan {
     private(set) var todos: [Todo] = []
     private var remainingLines: [String] = []
 
-    var isEmpty: Bool { events.isEmpty && todos.isEmpty }
-
     init(_ source: String) {
         let lines = source.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
 

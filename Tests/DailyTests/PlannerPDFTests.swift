@@ -118,12 +118,13 @@ struct PlannerPDFTests {
         #expect(second.minY > wrapped.maxY)
         #expect(wrapped.minY > third.maxY)
         #expect(late.midY > midnight.midY)
-        #expect(page.string?.contains("To-do") == false)
     }
 
-    @Test(arguments: [false, true])
-    func rulesExtendToTheBottomOfTheChecklist(hasTodo: Bool) throws {
-        let plan = Plan(hasTodo ? "Day\n- First task" : "Day")
+    @Test(arguments: [false, true], [false, true])
+    func checklistFillsTheColumnRegardlessOfSchedule(hasEvent: Bool, hasTodo: Bool) throws {
+        let event = hasEvent ? "\n9 Morning event" : ""
+        let todo = hasTodo ? "\n- First task" : ""
+        let plan = Plan("Day" + event + todo)
         let document = try openPlannerPDF(PlannerPDF.make(from: plan))
         let page = try #require(document.page(at: 0))
         let heading = try bounds(of: "To-do", on: page)

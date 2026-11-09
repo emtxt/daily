@@ -44,7 +44,7 @@ Lines starting with `#` are comments. The preview skips comments, blank lines, a
 
 **Automatic calendar hours** fits the grid to the events, rounding out to whole hours. With no events, it shows 00:00 to 24:00. Turn it off to choose fixed **Start** and **End** hours. The fixed range must include all events. Create a fresh preview after changing the hours. Daily tightens spacing when needed and reports an error if the plan still exceeds one page.
 
-A plan without events or to-dos prints as a worksheet with the hourly grid and empty checklist rows for handwriting. An empty draft also leaves room to write the title by hand. When a plan has to-dos, ruled writing space extends below them with room to draw your own checkboxes.
+Whenever the plan has no to-dos, the checklist is filled with ruled rows and empty checkboxes for handwriting. When a plan has to-dos, ruled writing space extends below them with room to draw your own checkboxes. An empty draft also leaves room to write the title by hand.
 
 ## Run tests
 

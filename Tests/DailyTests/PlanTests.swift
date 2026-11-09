@@ -25,7 +25,8 @@ struct PlanTests {
         let plan = Plan("\n # instructions only\n")
 
         #expect(plan.title.isEmpty)
-        #expect(plan.isEmpty)
+        #expect(plan.events.isEmpty)
+        #expect(plan.todos.isEmpty)
         #expect(plan.formattedSource == " # instructions only\n")
         #expect(Plan("  \n").formattedSource.isEmpty)
     }
