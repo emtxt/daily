@@ -1,6 +1,34 @@
 import AppKit
 import CoreText
 
+enum ScheduleRange: Equatable {
+    case automatic
+    case fixed(start: Int, end: Int)
+
+    func hours(for events: [Plan.Event]) throws -> ClosedRange<Int> {
+        let eventHours = events.first.map { first in
+            let start = first.time.start / 60
+            let latestEnd = events.map(\.time.endOnPage).max() ?? 0
+            let latestStart = events.last?.time.start ?? first.time.start
+            let end = max((latestEnd + 59) / 60, latestStart / 60 + 1)
+            return start...end
+        }
+
+        switch self {
+        case .automatic:
+            return eventHours ?? 0...24
+        case let .fixed(start, end):
+            guard 0 <= start, start < end, end <= 24 else {
+                throw DailyError("Choose a calendar start hour before its end hour.")
+            }
+            if let eventHours, eventHours.lowerBound < start || eventHours.upperBound > end {
+                throw DailyError("The calendar hours must include all events. Adjust the range or turn on automatic hours.")
+            }
+            return start...end
+        }
+    }
+}
+
 enum PlannerPDF {
     static let paperSize = CGSize(width: 210 * 72 / 25.4, height: 297 * 72 / 25.4)
     private static let margin: CGFloat = 42
@@ -31,12 +59,13 @@ enum PlannerPDF {
         case calendar
     }
 
-    static func make(from plan: Plan) throws -> Data {
+    static func make(from plan: Plan, scheduleRange: ScheduleRange = .automatic) throws -> Data {
+        let hours = try scheduleRange.hours(for: plan.events)
         do {
-            return try render(plan, style: Style(taskSize: 12, taskPadding: 8, eventSize: 11, eventSpacing: 5))
+            return try render(plan, hours: hours, style: Style(taskSize: 12, taskPadding: 8, eventSize: 11, eventSpacing: 5))
         } catch is Overflow {
             do {
-                return try render(plan, style: Style(taskSize: 10.5, taskPadding: 4, eventSize: 10, eventSpacing: 3))
+                return try render(plan, hours: hours, style: Style(taskSize: 10.5, taskPadding: 4, eventSize: 10, eventSpacing: 3))
             } catch Overflow.title {
                 throw DailyError("The title is too long for one A4 page. Shorten it and try again.")
             } catch Overflow.row(let lineNumber) {
@@ -47,7 +76,7 @@ enum PlannerPDF {
         }
     }
 
-    private static func render(_ plan: Plan, style: Style) throws -> Data {
+    private static func render(_ plan: Plan, hours: ClosedRange<Int>, style: Style) throws -> Data {
         let data = NSMutableData()
         var bounds = CGRect(origin: .zero, size: paperSize)
         let metadata = plan.title.isEmpty ? [:] : [kCGPDFContextTitle: plan.title]
@@ -60,12 +89,12 @@ enum PlannerPDF {
             defer { context.closePDF() }
             context.beginPDFPage(nil)
             defer { context.endPDFPage() }
-            try draw(plan, in: context, style: style)
+            try draw(plan, hours: hours, in: context, style: style)
         }
         return data as Data
     }
 
-    private static func draw(_ plan: Plan, in context: CGContext, style: Style) throws {
+    private static func draw(_ plan: Plan, hours: ClosedRange<Int>, in context: CGContext, style: Style) throws {
         let titleFont = NSFont.systemFont(ofSize: 32, weight: .semibold)
         let sectionFont = NSFont.systemFont(ofSize: 15, weight: .semibold)
         let labelFont = NSFont.systemFont(ofSize: 9, weight: .semibold)
@@ -95,11 +124,8 @@ enum PlannerPDF {
         let headingBaseline = headerBottom + 36
         let contentTop = headingBaseline + 15
 
-        if !plan.events.isEmpty || plan.isEmpty {
-            draw(line("Schedule", font: sectionFont), x: margin,
-                 baseline: headingBaseline, in: context)
-            try drawCalendar(plan.events, top: contentTop, right: calendarRight, style: style, in: context)
-        }
+        draw(line("Schedule", font: sectionFont), x: margin, baseline: headingBaseline, in: context)
+        try drawCalendar(plan.events, hours: hours, top: contentTop, right: calendarRight, style: style, in: context)
         if !plan.todos.isEmpty || plan.isEmpty {
             draw(line("To-do", font: sectionFont), x: taskLeft,
                  baseline: headingBaseline, in: context)
@@ -159,12 +185,8 @@ enum PlannerPDF {
         }
     }
 
-    private static func drawCalendar(_ events: [Plan.Event], top: CGFloat, right: CGFloat,
+    private static func drawCalendar(_ events: [Plan.Event], hours: ClosedRange<Int>, top: CGFloat, right: CGFloat,
                                      style: Style, in context: CGContext) throws {
-        let firstHour = events.first.map { min(8, $0.time.start / 60) } ?? 8
-        let latestEnd = events.map(\.time.endOnPage).max() ?? 0
-        let latestStart = events.last?.time.start ?? 0
-        let lastHour = max(18, (latestEnd + 59) / 60, latestStart / 60 + 1)
         let gridLeft = margin + 37
         let clockFont = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .regular)
         let checkboxX = gridLeft + 4
@@ -176,7 +198,7 @@ enum PlannerPDF {
         let leading = ceil(style.eventSize * 1.25)
         let bandPadding: CGFloat = 4
         let eventsByHour = Dictionary(grouping: events) { $0.time.start / 60 }
-        let bands = try (firstHour..<lastHour).map { hour in
+        let bands = try hours.dropLast().map { hour in
             let entries = try (eventsByHour[hour] ?? []).map { event in
                 let lines = try wrap(event.text, font: font, width: right - textX,
                                      limit: Int(floor(gridHeight / leading)), overflow: .row(event.lineNumber))
@@ -192,7 +214,7 @@ enum PlannerPDF {
 
         var hourTop = top
         for (offset, band) in bands.enumerated() {
-            drawHour(firstHour + offset, top: hourTop, left: gridLeft, right: right, font: clockFont, in: context)
+            drawHour(hours.lowerBound + offset, top: hourTop, left: gridLeft, right: right, font: clockFont, in: context)
             let height = max(hourHeight, band.minimumHeight)
             let freeSpace = height - band.minimumHeight
             var entryTop = hourTop + bandPadding
@@ -208,7 +230,7 @@ enum PlannerPDF {
             }
             hourTop += height
         }
-        drawHour(lastHour, top: hourTop, left: gridLeft, right: right, font: clockFont, in: context)
+        drawHour(hours.upperBound, top: hourTop, left: gridLeft, right: right, font: clockFont, in: context)
     }
 
     private static func fittedHourHeight(_ minimums: [CGFloat], available: CGFloat) -> CGFloat {

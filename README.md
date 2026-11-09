@@ -42,7 +42,7 @@ Start to-dos with `-` or use `*` for high priority. Events and to-dos can be int
 
 Lines starting with `#` are comments. The preview skips comments, blank lines, and unrecognized entries. **Format** adds `# Schedule` and `# To-dos` above their sections, writes event times as `HH:MM` or `HH:MM - HH:MM`, capitalizes descriptions, and puts high-priority to-dos first. It moves other comments and unrecognized lines to the end in their original order.
 
-The calendar shows an hourly grid from 08:00 to 18:00 by default and extends to include earlier or later events. Daily tightens spacing when needed and reports an error if the plan still exceeds one page.
+**Automatic calendar hours** fits the grid to the events, rounding out to whole hours. With no events, it shows 00:00 to 24:00. Turn it off to choose fixed **Start** and **End** hours. The fixed range must include all events. Create a fresh preview after changing the hours. Daily tightens spacing when needed and reports an error if the plan still exceeds one page.
 
 A plan without events or to-dos prints as a worksheet with the hourly grid and empty checklist rows for handwriting. An empty draft also leaves room to write the title by hand. When a plan has to-dos, ruled writing space extends below them with room to draw your own checkboxes.
 

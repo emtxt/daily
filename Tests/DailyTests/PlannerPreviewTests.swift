@@ -15,6 +15,7 @@ struct PlannerPreviewTests {
         #expect(document.string?.contains("Buy coffee") == true)
         #expect(document.string?.contains("Invalid entry") == false)
         #expect(preview.document(for: source + "\n- New task") == nil)
+        #expect(preview.document(for: source, scheduleRange: .fixed(start: 8, end: 18)) == nil)
     }
 
     @Test(arguments: ["": nil, "# Comment": nil, "Monday\n# Comment\nInvalid entry": "Monday"] as [String: String?])
@@ -35,8 +36,8 @@ struct PlannerPreviewTests {
             #expect(!text.contains(Plan.title(for: .now)))
         }
         #expect(text.contains("Schedule"))
-        #expect(text.contains("08:00"))
-        #expect(text.contains("18:00"))
+        #expect(text.contains("00:00"))
+        #expect(text.contains("24:00"))
         #expect(text.contains("To-do"))
         #expect(!text.contains("Invalid entry"))
     }

@@ -3,22 +3,27 @@ import SwiftUI
 
 struct PlannerPreview {
     let source: String
+    let scheduleRange: ScheduleRange
     let document: PDFDocument
 
-    init(source: String) throws {
+    init(source: String, scheduleRange: ScheduleRange = .automatic) throws {
         let plan = Plan(source)
         self.source = source
-        document = try openPlannerPDF(PlannerPDF.make(from: plan))
+        self.scheduleRange = scheduleRange
+        document = try openPlannerPDF(PlannerPDF.make(from: plan, scheduleRange: scheduleRange))
     }
 
-    func document(for source: String) -> PDFDocument? {
-        self.source == source ? document : nil
+    func document(for source: String, scheduleRange: ScheduleRange = .automatic) -> PDFDocument? {
+        self.source == source && self.scheduleRange == scheduleRange ? document : nil
     }
 }
 
 struct PlannerView: View {
     @AppStorage("planSource") private var source = ""
     @AppStorage("generatedPlanTitle") private var generatedTitle = ""
+    @AppStorage("automaticScheduleHours") private var automaticScheduleHours = true
+    @AppStorage("scheduleStartHour") private var scheduleStartHour = 8
+    @AppStorage("scheduleEndHour") private var scheduleEndHour = 18
     @State private var preview: PlannerPreview?
     @State private var showsHelp = false
     @State private var showsError = false
@@ -27,8 +32,12 @@ struct PlannerView: View {
     @State private var replacementTitle = ""
     @State private var printStatus: String?
 
+    private var scheduleRange: ScheduleRange {
+        automaticScheduleHours ? .automatic : .fixed(start: scheduleStartHour, end: scheduleEndHour)
+    }
+
     private var printableDocument: PDFDocument? {
-        preview?.document(for: source)
+        preview?.document(for: source, scheduleRange: scheduleRange)
     }
 
     var body: some View {
@@ -39,6 +48,7 @@ struct PlannerView: View {
                 .frame(minWidth: 420, idealWidth: 640, maxWidth: .infinity)
         }
         .onChange(of: source) { printStatus = nil }
+        .onChange(of: scheduleRange) { printStatus = nil }
         .alert("Daily", isPresented: $showsError) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -85,6 +95,26 @@ struct PlannerView: View {
                     .popover(isPresented: $showsHelp, arrowEdge: .bottom) {
                         PlanFormatHelp()
                     }
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Toggle("Automatic calendar hours", isOn: $automaticScheduleHours)
+                    .help("Fit the grid to the events, or show the full day when there are none.")
+                if !automaticScheduleHours {
+                    HStack(spacing: 12) {
+                        Picker("Start", selection: $scheduleStartHour) {
+                            ForEach(0..<24) { hour in
+                                Text(Plan.Time.label(for: hour * 60)).tag(hour)
+                            }
+                        }
+                        Picker("End", selection: $scheduleEndHour) {
+                            ForEach(1..<25) { hour in
+                                Text(Plan.Time.label(for: hour * 60)).tag(hour)
+                            }
+                        }
+                    }
+                    .fixedSize()
                 }
             }
 
@@ -161,7 +191,7 @@ struct PlannerView: View {
             }
 
             if preview != nil && printableDocument == nil {
-                Text("Plan changed. Create a new preview to print.")
+                Text("Create a new preview to print these changes.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else if let printStatus {
@@ -176,7 +206,7 @@ struct PlannerView: View {
     private func createPreview() {
         printStatus = nil
         do {
-            preview = try PlannerPreview(source: source)
+            preview = try PlannerPreview(source: source, scheduleRange: scheduleRange)
         } catch {
             presentError(error)
         }

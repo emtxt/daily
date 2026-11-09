@@ -31,14 +31,39 @@ struct PlannerPDFTests {
         #expect(normal.minX >= todos.minX)
         #expect(normal.midY > priority.midY)
         #expect(abs(normal.minX - priority.minX) <= 1)
-        #expect(page.string?.contains("08:00") == true)
-        #expect(page.string?.contains("18:00") == true)
+        #expect(page.string?.contains("09:00") == true)
+        #expect(page.string?.contains("10:00") == true)
 
         let text = try #require(page.string)
         let timestamp = try #require(text.firstMatch(of: #/Generated [0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}/#))
         let footer = try bounds(of: String(timestamp.output), on: page)
         #expect(footer.minX > paper.midX)
         #expect(footer.maxY < 42)
+    }
+
+    @Test
+    func calendarUsesFixedHoursAndRejectsRangesThatExcludeEvents() throws {
+        let plan = Plan("Day\n9:15-14:30 Workshop\n12 Lunch")
+        #expect(try ScheduleRange.automatic.hours(for: plan.events) == 9...15)
+
+        let fixed = ScheduleRange.fixed(start: 7, end: 17)
+        let document = try openPlannerPDF(PlannerPDF.make(from: plan, scheduleRange: fixed))
+        let text = try #require(document.string)
+        #expect(text.contains("07:00"))
+        #expect(text.contains("17:00"))
+        #expect(text.contains("Workshop"))
+        #expect(text.contains("Lunch"))
+
+        for range in [ScheduleRange.fixed(start: 10, end: 17), .fixed(start: 7, end: 14)] {
+            let error = try #require(throws: DailyError.self) {
+                try PlannerPDF.make(from: plan, scheduleRange: range)
+            }
+            #expect(error.localizedDescription.contains("must include all events"))
+        }
+
+        #expect(throws: DailyError.self) {
+            try PlannerPDF.make(from: plan, scheduleRange: .fixed(start: 17, end: 7))
+        }
     }
 
     @Test
@@ -117,7 +142,8 @@ struct PlannerPDFTests {
 
         #expect(document.pageCount == 1)
         #expect(page.string?.contains("Task 23") == true)
-        #expect(page.string?.contains("Schedule") == false)
+        #expect(page.string?.contains("00:00") == true)
+        #expect(page.string?.contains("24:00") == true)
     }
 
     @Test
